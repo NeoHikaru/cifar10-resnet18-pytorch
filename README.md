@@ -346,6 +346,13 @@ The final model performs well overall, with most errors happening between visual
 
 The model was trained on CIFAR-10 images with a resolution of 32x32 pixels, so predictions on real high-resolution images may be less reliable than predictions on CIFAR-like images.
 
+## Gradio Demo
+
+Run local demo:
+
+```bash
+python3 demo.py
+
 ## Future Improvements
 
 Possible next experiments:
