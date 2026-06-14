@@ -1,7 +1,10 @@
 data/
+models/
+legacy/
 __pycache__/
 *.pyc
 .venv/
 venv/
 *.pth
+*.zip
 .DS_Store
