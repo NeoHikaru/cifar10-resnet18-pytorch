@@ -4,6 +4,7 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import numpy as np
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
 from src.config import (
@@ -18,8 +19,26 @@ from src.data import get_dataloaders
 from src.model import CifarResNet18
 from src.utils import get_device, set_seed, count_parameters
 
+def mixup_data(images, labels, alpha: float, device):
+    if alpha <= 0:
+        return images, labels, labels, 1.0
 
-def train_one_epoch(model, train_loader, loss_fn, optimizer, device):
+    lam = np.random.beta(alpha, alpha)
+
+    batch_size = images.size(0)
+    index = torch.randperm(batch_size).to(device)
+
+    mixed_images = lam * images + (1 - lam) * images[index]
+    labels_a = labels
+    labels_b = labels[index]
+
+    return mixed_images, labels_a, labels_b, lam
+
+
+def mixup_loss(loss_fn, outputs, labels_a, labels_b, lam):
+    return lam * loss_fn(outputs, labels_a) + (1 - lam) * loss_fn(outputs, labels_b)
+
+def train_one_epoch(model, train_loader, loss_fn, optimizer, device, mixup_alpha: float = 0.0):
     model.train()
 
     total_loss = 0.0
@@ -32,8 +51,13 @@ def train_one_epoch(model, train_loader, loss_fn, optimizer, device):
 
         optimizer.zero_grad()
 
-        outputs = model(images)
-        loss = loss_fn(outputs, labels)
+        if mixup_alpha > 0:
+            images, labels_a, labels_b, lam = mixup_data(images, labels, mixup_alpha, device)
+            outputs = model(images)
+            loss = mixup_loss(loss_fn, outputs, labels_a, labels_b, lam)
+        else:
+            outputs = model(images)
+            loss = loss_fn(outputs, labels)
 
         loss.backward()
         optimizer.step()
@@ -87,7 +111,12 @@ def parse_args():
     parser.add_argument("--label-smoothing", type=float, default=LABEL_SMOOTHING)
     parser.add_argument("--num-workers", type=int, default=2)
     parser.add_argument("--seed", type=int, default=42)
-
+    parser.add_argument(
+    "--mixup-alpha",
+    type=float,
+    default=0.0,
+    help="MixUp alpha value. Use 0.0 to disable MixUp.",
+)
     parser.add_argument(
         "--no-random-erasing",
         action="store_true",
@@ -147,6 +176,7 @@ def main():
             loss_fn=loss_fn,
             optimizer=optimizer,
             device=device,
+            mixup_alpha=args.mixup_alpha,
         )
 
         test_loss, test_accuracy = evaluate(

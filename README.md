@@ -2,7 +2,7 @@
 
 Small computer vision project using PyTorch and CIFAR-10.
 
-The project started with a simple CNN and was improved step by step to a tuned ResNet-18 model with regularization, data augmentation, evaluation tools, visualization, and single-image prediction.
+The project started with a simple CNN and was improved step by step to a tuned ResNet-18 model with regularization, data augmentation, MixUp training, evaluation tools, visualization, single-image prediction, and a local Gradio demo.
 
 ## Final Result
 
@@ -18,8 +18,10 @@ Best model:
   * RandomCrop
   * RandomHorizontalFlip
   * RandomErasing
-* Best test accuracy: **93.56%**
-* Errors: **644 / 10000**
+  * MixUp
+* MixUp alpha: `0.2`
+* Best test accuracy: **93.75%**
+* Errors: **625 / 10000**
 
 ## Dataset
 
@@ -47,49 +49,50 @@ Classes:
 
 ## Results
 
-| Model                                       | Test Accuracy |
-| ------------------------------------------- | ------------: |
-| Simple CNN                                  |        87.07% |
-| ResNet-18                                   |        92.92% |
-| ResNet-18 + Label Smoothing                 |        93.28% |
-| ResNet-18 + Label Smoothing + RandomErasing |    **93.56%** |
+| Model                                               | Test Accuracy |
+| --------------------------------------------------- | ------------: |
+| Simple CNN                                          |        87.07% |
+| ResNet-18                                           |        92.92% |
+| ResNet-18 + Label Smoothing                         |        93.28% |
+| ResNet-18 + Label Smoothing + RandomErasing         |        93.56% |
+| ResNet-18 + Label Smoothing + RandomErasing + MixUp |    **93.75%** |
 
 ## Per-Class Accuracy
 
 | Class      | Accuracy |
 | ---------- | -------: |
-| airplane   |   94.40% |
-| automobile |   97.70% |
-| bird       |   90.40% |
-| cat        |   86.20% |
-| deer       |   94.40% |
-| dog        |   90.00% |
-| frog       |   95.60% |
-| horse      |   95.00% |
-| ship       |   95.90% |
-| truck      |   96.00% |
+| airplane   |   95.30% |
+| automobile |   98.10% |
+| bird       |   91.50% |
+| cat        |   86.70% |
+| deer       |   93.70% |
+| dog        |   89.70% |
+| frog       |   95.30% |
+| horse      |   95.40% |
+| ship       |   96.30% |
+| truck      |   95.50% |
 
-The weakest class was `cat`, mostly because the model often confused cats and dogs.
+The weakest classes are still visually similar animal classes, especially `cat` and `dog`.
 
 ## Most Common Errors
 
 | Real Class | Predicted Class | Count |
 | ---------- | --------------- | ----: |
-| cat        | dog             |    77 |
-| dog        | cat             |    57 |
-| bird       | deer            |    23 |
-| truck      | automobile      |    22 |
-| bird       | cat             |    21 |
-| deer       | bird            |    18 |
-| cat        | bird            |    18 |
-| airplane   | ship            |    18 |
-| horse      | dog             |    17 |
-| frog       | bird            |    17 |
-| bird       | frog            |    17 |
-| automobile | truck           |    17 |
-| deer       | cat             |    16 |
-| cat        | deer            |    16 |
-| airplane   | bird            |    16 |
+| cat        | dog             |    68 |
+| dog        | cat             |    61 |
+| truck      | automobile      |    29 |
+| ship       | airplane        |    21 |
+| bird       | cat             |    19 |
+| horse      | dog             |    18 |
+| frog       | cat             |    18 |
+| frog       | bird            |    16 |
+| deer       | bird            |    16 |
+| airplane   | ship            |    16 |
+| deer       | cat             |    15 |
+| cat        | frog            |    15 |
+| cat        | bird            |    15 |
+| bird       | deer            |    15 |
+| airplane   | bird            |    15 |
 
 ## Confusion Matrix
 
@@ -120,6 +123,7 @@ cifar10-resnet18-pytorch/
 ├── visualize_mistakes.py
 ├── predict.py
 ├── export_samples.py
+├── demo.py
 ├── src/
 │   ├── __init__.py
 │   ├── config.py
@@ -151,19 +155,25 @@ Model weights are stored separately and are not included in this repository.
 Best model file:
 
 ```text
+cifar_resnet18_mixup_best.pth
+```
+
+Previous best model file:
+
+```text
 cifar_resnet18_smooth_erasing_best.pth
 ```
 
-Google Drive link:
+Model weights link:
 
 ```text
-https://drive.google.com/file/d/13ETZ2NhCuk5G91QQXIARWGrFjT1CcGMM/view?usp=sharing
+https://drive.google.com/file/d/13ETZ2NhCuk5G91QQXIARWGrFjT1CcGMM/view?usp=drive_link
 ```
 
-Locally, the model checkpoint should be placed here:
+Locally, the best model checkpoint should be placed here:
 
 ```text
-models/cifar_resnet18_smooth_erasing_best.pth
+models/cifar_resnet18_mixup_best.pth
 ```
 
 The `models/` directory is ignored by Git.
@@ -179,17 +189,26 @@ pip install -r requirements.txt
 Or install manually:
 
 ```bash
-pip install torch torchvision matplotlib numpy pillow
+pip install torch torchvision matplotlib numpy pillow gradio
 ```
 
 ## Scripts
 
 ### Train
 
-Train the model:
+Train the model with default settings:
 
 ```bash
 python3 train.py
+```
+
+Train the MixUp model:
+
+```bash
+python3 train.py \
+  --epochs 40 \
+  --mixup-alpha 0.2 \
+  --model-name cifar_resnet18_mixup_best.pth
 ```
 
 Train for a custom number of epochs:
@@ -218,16 +237,16 @@ python3 train.py --model-name custom_model.pth
 
 ### Evaluate
 
-Evaluate the best model:
+Evaluate the best MixUp model:
+
+```bash
+python3 evaluate.py --model-path models/cifar_resnet18_mixup_best.pth
+```
+
+Evaluate the default model from `src/config.py`:
 
 ```bash
 python3 evaluate.py
-```
-
-Evaluate a custom checkpoint:
-
-```bash
-python3 evaluate.py --model-path models/cifar_resnet18_smooth_erasing_best.pth
 ```
 
 This script prints:
@@ -244,7 +263,15 @@ It also saves confusion matrix images to the `images/` directory.
 Generate an image grid with the most confident wrong predictions:
 
 ```bash
-python3 visualize_mistakes.py
+python3 visualize_mistakes.py --model-path models/cifar_resnet18_mixup_best.pth
+```
+
+Save MixUp mistakes visualization with a custom output name:
+
+```bash
+python3 visualize_mistakes.py \
+  --model-path models/cifar_resnet18_mixup_best.pth \
+  --output cifar_resnet_mixup_mistakes.png
 ```
 
 Change the number of shown mistakes:
@@ -253,18 +280,20 @@ Change the number of shown mistakes:
 python3 visualize_mistakes.py --limit 25
 ```
 
-Output:
-
-```text
-images/cifar_resnet_mistakes.png
-```
-
 ### Predict One Image
 
 Run prediction on a single image:
 
 ```bash
 python3 predict.py --image samples/cat.png
+```
+
+Run prediction with the MixUp checkpoint:
+
+```bash
+python3 predict.py \
+  --image samples/cat.png \
+  --model-path models/cifar_resnet18_mixup_best.pth
 ```
 
 Run prediction on a custom image:
@@ -292,6 +321,22 @@ Output directory:
 ```text
 samples/
 ```
+
+### Gradio Demo
+
+Run local Gradio demo:
+
+```bash
+python3 demo.py
+```
+
+Default local URL:
+
+```text
+http://127.0.0.1:7860
+```
+
+The demo opens a local web interface where you can upload an image and get top-3 CIFAR-10 predictions.
 
 ## Sample Predictions
 
@@ -322,19 +367,21 @@ Device used:
 mps
 ```
 
-Main training settings:
+Main training settings for the best model:
 
 ```text
 Epochs: 40
 Optimizer: AdamW
 Scheduler: CosineAnnealingLR
 Loss: CrossEntropyLoss(label_smoothing=0.1)
+RandomErasing: enabled
+MixUp alpha: 0.2
 Best checkpoint selection: by test accuracy
 ```
 
 ## Notes
 
-RandomErasing improved the final model from 93.28% to 93.56%.
+MixUp improved the final model from **93.56%** to **93.75%**.
 
 The most difficult classes were animals with similar visual features, especially:
 
@@ -346,23 +393,35 @@ The final model performs well overall, with most errors happening between visual
 
 The model was trained on CIFAR-10 images with a resolution of 32x32 pixels, so predictions on real high-resolution images may be less reliable than predictions on CIFAR-like images.
 
-## Gradio Demo
+## Releases
 
-Run local demo:
+Current release:
 
-```bash
-python3 demo.py
+```text
+v1.2.0
 ```
+
+Release highlights:
+
+* cleaned project structure
+* refactored training and evaluation pipeline
+* added single-image prediction
+* added CIFAR-10 sample export
+* added Gradio demo
+* added MixUp training support
+* improved best accuracy to **93.75%**
 
 ## Future Improvements
 
 Possible next experiments:
 
-* MixUp
+* SGD + Nesterov benchmark
+* 100–200 epoch training
 * CutMix
 * ResNet-34
 * WideResNet
 * stronger augmentation
 * learning rate tuning
 * model calibration analysis
-* Gradio demo for image upload and top-k predictions
+* Hugging Face Model repository
+* Hugging Face Space demo

@@ -5,7 +5,7 @@ DATA_DIR = BASE_DIR / "data"
 MODELS_DIR = BASE_DIR / "models"
 IMAGES_DIR = BASE_DIR / "images"
 
-BEST_MODEL_PATH = MODELS_DIR / "cifar_resnet18_smooth_erasing_best.pth"
+BEST_MODEL_PATH = MODELS_DIR / "cifar_resnet18_mixup_best.pth"
 
 CLASSES = [
     "airplane",
