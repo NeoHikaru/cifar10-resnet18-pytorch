@@ -2,7 +2,7 @@
 
 Small computer vision project using PyTorch and CIFAR-10.
 
-The project started with a simple CNN and was improved step by step to a tuned ResNet-18 model with regularization and data augmentation.
+The project started with a simple CNN and was improved step by step to a tuned ResNet-18 model with regularization, data augmentation, evaluation tools, visualization, and single-image prediction.
 
 ## Final Result
 
@@ -115,13 +115,32 @@ This helps show where the model is confidently wrong and which classes are still
 cifar10-resnet18-pytorch/
 ├── README.md
 ├── requirements.txt
-├── train_resnet_cifar.py
-├── show_resnet_mistakes.py
-├── confusion_resnet.py
+├── train.py
+├── evaluate.py
+├── visualize_mistakes.py
+├── predict.py
+├── export_samples.py
+├── src/
+│   ├── __init__.py
+│   ├── config.py
+│   ├── data.py
+│   ├── model.py
+│   └── utils.py
 ├── images/
 │   ├── cifar_resnet_mistakes.png
 │   ├── confusion_resnet_counts.png
 │   └── confusion_resnet_percent.png
+├── samples/
+│   ├── airplane.png
+│   ├── automobile.png
+│   ├── bird.png
+│   ├── cat.png
+│   ├── deer.png
+│   ├── dog.png
+│   ├── frog.png
+│   ├── horse.png
+│   ├── ship.png
+│   └── truck.png
 └── .gitignore
 ```
 
@@ -138,41 +157,159 @@ cifar_resnet18_smooth_erasing_best.pth
 Google Drive link:
 
 ```text
-https://drive.google.com/file/d/13ETZ2NhCuk5G91QQXIARWGrFjT1CcGMM/view?usp=sharing
+PASTE_GOOGLE_DRIVE_LINK_HERE
 ```
+
+Locally, the model checkpoint should be placed here:
+
+```text
+models/cifar_resnet18_smooth_erasing_best.pth
+```
+
+The `models/` directory is ignored by Git.
 
 ## Installation
 
 Install dependencies:
 
 ```bash
-pip install torch torchvision matplotlib numpy
-```
-
-Or install from `requirements.txt`:
-
-```bash
 pip install -r requirements.txt
 ```
 
-## Run
+Or install manually:
+
+```bash
+pip install torch torchvision matplotlib numpy pillow
+```
+
+## Scripts
+
+### Train
 
 Train the model:
 
 ```bash
-python train_resnet_cifar.py
+python3 train.py
 ```
 
-Show most confident mistakes:
+Train for a custom number of epochs:
 
 ```bash
-python show_resnet_mistakes.py
+python3 train.py --epochs 40
 ```
 
-Generate confusion matrix:
+Train with custom batch size:
 
 ```bash
-python confusion_resnet.py
+python3 train.py --epochs 40 --batch-size 128
+```
+
+Disable RandomErasing:
+
+```bash
+python3 train.py --no-random-erasing
+```
+
+Save checkpoint with a custom name:
+
+```bash
+python3 train.py --model-name custom_model.pth
+```
+
+### Evaluate
+
+Evaluate the best model:
+
+```bash
+python3 evaluate.py
+```
+
+Evaluate a custom checkpoint:
+
+```bash
+python3 evaluate.py --model-path models/cifar_resnet18_smooth_erasing_best.pth
+```
+
+This script prints:
+
+* total accuracy
+* number of errors
+* per-class accuracy
+* most common classification errors
+
+It also saves confusion matrix images to the `images/` directory.
+
+### Visualize Mistakes
+
+Generate an image grid with the most confident wrong predictions:
+
+```bash
+python3 visualize_mistakes.py
+```
+
+Change the number of shown mistakes:
+
+```bash
+python3 visualize_mistakes.py --limit 25
+```
+
+Output:
+
+```text
+images/cifar_resnet_mistakes.png
+```
+
+### Predict One Image
+
+Run prediction on a single image:
+
+```bash
+python3 predict.py --image samples/cat.png
+```
+
+Run prediction on a custom image:
+
+```bash
+python3 predict.py --image "/path/to/image.jpg"
+```
+
+Show top-5 predictions:
+
+```bash
+python3 predict.py --image samples/cat.png --top-k 5
+```
+
+### Export CIFAR-10 Samples
+
+Export one sample image for each CIFAR-10 class:
+
+```bash
+python3 export_samples.py
+```
+
+Output directory:
+
+```text
+samples/
+```
+
+## Sample Predictions
+
+Example predictions from exported CIFAR-10 samples:
+
+```text
+cat.png        -> cat: 91.40%
+airplane.png   -> airplane: 91.09%
+automobile.png -> automobile: 90.30%
+dog.png        -> dog: 93.32%
+```
+
+Example prediction on a real cat image:
+
+```text
+cat: 92.22%
+bird: 0.99%
+horse: 0.96%
 ```
 
 ## Training Setup
@@ -207,6 +344,8 @@ The most difficult classes were animals with similar visual features, especially
 
 The final model performs well overall, with most errors happening between visually similar classes rather than random incorrect predictions.
 
+The model was trained on CIFAR-10 images with a resolution of 32x32 pixels, so predictions on real high-resolution images may be less reliable than predictions on CIFAR-like images.
+
 ## Future Improvements
 
 Possible next experiments:
@@ -218,3 +357,4 @@ Possible next experiments:
 * stronger augmentation
 * learning rate tuning
 * model calibration analysis
+* Gradio demo for image upload and top-k predictions
