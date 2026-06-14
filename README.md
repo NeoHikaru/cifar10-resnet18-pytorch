@@ -352,6 +352,7 @@ Run local demo:
 
 ```bash
 python3 demo.py
+```
 
 ## Future Improvements
 
