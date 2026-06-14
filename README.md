@@ -157,7 +157,7 @@ cifar_resnet18_smooth_erasing_best.pth
 Google Drive link:
 
 ```text
-PASTE_GOOGLE_DRIVE_LINK_HERE
+https://drive.google.com/file/d/13ETZ2NhCuk5G91QQXIARWGrFjT1CcGMM/view?usp=sharing
 ```
 
 Locally, the model checkpoint should be placed here:
