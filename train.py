@@ -1,4 +1,5 @@
 import argparse
+from email import parser
 from pathlib import Path
 
 import torch
@@ -109,6 +110,23 @@ def parse_args():
     parser.add_argument("--lr", type=float, default=LEARNING_RATE)
     parser.add_argument("--weight-decay", type=float, default=WEIGHT_DECAY)
     parser.add_argument("--label-smoothing", type=float, default=LABEL_SMOOTHING)
+    parser.add_argument(
+    "--optimizer",
+    type=str,
+    default="adamw",
+    choices=["adamw", "sgd"],
+)
+
+    parser.add_argument(
+    "--momentum",
+    type=float,
+    default=0.9,
+)
+
+    parser.add_argument(
+    "--nesterov",
+    action="store_true",
+)
     parser.add_argument("--num-workers", type=int, default=2)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument(
@@ -155,11 +173,20 @@ def main():
 
     loss_fn = nn.CrossEntropyLoss(label_smoothing=args.label_smoothing)
 
-    optimizer = optim.AdamW(
-        model.parameters(),
-        lr=args.lr,
-        weight_decay=args.weight_decay,
-    )
+    if args.optimizer == "adamw":
+        optimizer = optim.AdamW(
+            model.parameters(),
+            lr=args.lr,
+            weight_decay=args.weight_decay,
+        )
+    elif args.optimizer == "sgd":
+        optimizer = optim.SGD(
+            model.parameters(),
+            lr=args.lr,
+            momentum=args.momentum,
+            weight_decay=args.weight_decay,
+            nesterov=args.nesterov,
+        )
 
     scheduler = CosineAnnealingLR(
         optimizer,

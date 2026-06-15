@@ -2,7 +2,7 @@
 
 Small computer vision project using PyTorch and CIFAR-10.
 
-The project started with a simple CNN and was improved step by step to a tuned ResNet-18 model with regularization, data augmentation, MixUp training, evaluation tools, visualization, single-image prediction, and a local Gradio demo.
+The project started with a simple CNN and was improved step by step to a tuned ResNet-18 model with regularization, data augmentation, MixUp training, SGD/Nesterov optimization, evaluation tools, visualization, single-image prediction, and a local Gradio demo.
 
 ## Final Result
 
@@ -10,7 +10,9 @@ Best model:
 
 * Architecture: ResNet-18
 * Dataset: CIFAR-10
-* Optimizer: AdamW
+* Optimizer: SGD
+* Momentum: `0.9`
+* Nesterov: `true`
 * Scheduler: CosineAnnealingLR
 * Loss: CrossEntropyLoss with `label_smoothing=0.1`
 * Augmentation:
@@ -18,10 +20,9 @@ Best model:
   * RandomCrop
   * RandomHorizontalFlip
   * RandomErasing
-  * MixUp
-* MixUp alpha: `0.2`
-* Best test accuracy: **93.75%**
-* Errors: **625 / 10000**
+* Epochs: `100`
+* Best test accuracy: **95.49%**
+* Errors: **451 / 10000**
 
 ## Dataset
 
@@ -49,50 +50,51 @@ Classes:
 
 ## Results
 
-| Model                                               | Test Accuracy |
-| --------------------------------------------------- | ------------: |
-| Simple CNN                                          |        87.07% |
-| ResNet-18                                           |        92.92% |
-| ResNet-18 + Label Smoothing                         |        93.28% |
-| ResNet-18 + Label Smoothing + RandomErasing         |        93.56% |
-| ResNet-18 + Label Smoothing + RandomErasing + MixUp |    **93.75%** |
+| Model                                                        | Test Accuracy |
+| ------------------------------------------------------------ | ------------: |
+| Simple CNN                                                   |        87.07% |
+| ResNet-18                                                    |        92.92% |
+| ResNet-18 + Label Smoothing                                  |        93.28% |
+| ResNet-18 + Label Smoothing + RandomErasing                  |        93.56% |
+| ResNet-18 + Label Smoothing + RandomErasing + MixUp          |        93.75% |
+| ResNet-18 + SGD + Nesterov + Label Smoothing + RandomErasing |    **95.49%** |
 
 ## Per-Class Accuracy
 
 | Class      | Accuracy |
 | ---------- | -------: |
-| airplane   |   95.30% |
-| automobile |   98.10% |
-| bird       |   91.50% |
-| cat        |   86.70% |
-| deer       |   93.70% |
-| dog        |   89.70% |
-| frog       |   95.30% |
-| horse      |   95.40% |
-| ship       |   96.30% |
-| truck      |   95.50% |
+| airplane   |   95.10% |
+| automobile |   98.50% |
+| bird       |   94.10% |
+| cat        |   91.30% |
+| deer       |   96.60% |
+| dog        |   92.40% |
+| frog       |   96.50% |
+| horse      |   97.10% |
+| ship       |   97.40% |
+| truck      |   95.90% |
 
-The weakest classes are still visually similar animal classes, especially `cat` and `dog`.
+The weakest classes are still visually similar animal classes, especially `cat` and `dog`, but the SGD/Nesterov training recipe significantly improved these classes compared to the previous MixUp model.
 
 ## Most Common Errors
 
 | Real Class | Predicted Class | Count |
 | ---------- | --------------- | ----: |
-| cat        | dog             |    68 |
-| dog        | cat             |    61 |
-| truck      | automobile      |    29 |
-| ship       | airplane        |    21 |
-| bird       | cat             |    19 |
-| horse      | dog             |    18 |
-| frog       | cat             |    18 |
-| frog       | bird            |    16 |
-| deer       | bird            |    16 |
-| airplane   | ship            |    16 |
-| deer       | cat             |    15 |
-| cat        | frog            |    15 |
-| cat        | bird            |    15 |
-| bird       | deer            |    15 |
-| airplane   | bird            |    15 |
+| cat        | dog             |    53 |
+| dog        | cat             |    50 |
+| truck      | automobile      |    25 |
+| airplane   | ship            |    17 |
+| frog       | cat             |    16 |
+| bird       | dog             |    14 |
+| airplane   | bird            |    14 |
+| ship       | airplane        |    13 |
+| automobile | truck           |    13 |
+| deer       | cat             |    12 |
+| bird       | frog            |    12 |
+| bird       | deer            |    12 |
+| frog       | bird            |    10 |
+| horse      | dog             |     9 |
+| dog        | deer            |     9 |
 
 ## Confusion Matrix
 
@@ -108,7 +110,7 @@ Confusion matrix by percentage:
 
 The model was also tested on its most confident wrong predictions.
 
-![Most Confident Mistakes](images/cifar_resnet_mistakes.png)
+![Most Confident Mistakes](images/cifar_resnet_sgd100_mistakes.png)
 
 This helps show where the model is confidently wrong and which classes are still difficult to separate.
 
@@ -132,6 +134,8 @@ cifar10-resnet18-pytorch/
 │   └── utils.py
 ├── images/
 │   ├── cifar_resnet_mistakes.png
+│   ├── cifar_resnet_mixup_mistakes.png
+│   ├── cifar_resnet_sgd100_mistakes.png
 │   ├── confusion_resnet_counts.png
 │   └── confusion_resnet_percent.png
 ├── samples/
@@ -155,12 +159,13 @@ Model weights are stored separately and are not included in this repository.
 Best model file:
 
 ```text
-cifar_resnet18_mixup_best.pth
+cifar_resnet18_sgd100_best.pth
 ```
 
-Previous best model file:
+Previous best model files:
 
 ```text
+cifar_resnet18_mixup_best.pth
 cifar_resnet18_smooth_erasing_best.pth
 ```
 
@@ -173,7 +178,7 @@ https://drive.google.com/file/d/13ETZ2NhCuk5G91QQXIARWGrFjT1CcGMM/view?usp=drive
 Locally, the best model checkpoint should be placed here:
 
 ```text
-models/cifar_resnet18_mixup_best.pth
+models/cifar_resnet18_sgd100_best.pth
 ```
 
 The `models/` directory is ignored by Git.
@@ -202,7 +207,21 @@ Train the model with default settings:
 python3 train.py
 ```
 
-Train the MixUp model:
+Train the current best SGD/Nesterov model:
+
+```bash
+python3 train.py \
+  --epochs 100 \
+  --optimizer sgd \
+  --lr 0.1 \
+  --momentum 0.9 \
+  --nesterov \
+  --weight-decay 5e-4 \
+  --label-smoothing 0.1 \
+  --model-name cifar_resnet18_sgd100_best.pth
+```
+
+Train the previous MixUp model:
 
 ```bash
 python3 train.py \
@@ -211,13 +230,17 @@ python3 train.py \
   --model-name cifar_resnet18_mixup_best.pth
 ```
 
-Train for a custom number of epochs:
+Train with AdamW:
 
 ```bash
-python3 train.py --epochs 40
+python3 train.py \
+  --epochs 40 \
+  --optimizer adamw \
+  --lr 0.001 \
+  --weight-decay 5e-4
 ```
 
-Train with custom batch size:
+Train with a custom batch size:
 
 ```bash
 python3 train.py --epochs 40 --batch-size 128
@@ -237,10 +260,10 @@ python3 train.py --model-name custom_model.pth
 
 ### Evaluate
 
-Evaluate the best MixUp model:
+Evaluate the best SGD/Nesterov model:
 
 ```bash
-python3 evaluate.py --model-path models/cifar_resnet18_mixup_best.pth
+python3 evaluate.py --model-path models/cifar_resnet18_sgd100_best.pth
 ```
 
 Evaluate the default model from `src/config.py`:
@@ -263,15 +286,15 @@ It also saves confusion matrix images to the `images/` directory.
 Generate an image grid with the most confident wrong predictions:
 
 ```bash
-python3 visualize_mistakes.py --model-path models/cifar_resnet18_mixup_best.pth
+python3 visualize_mistakes.py --model-path models/cifar_resnet18_sgd100_best.pth
 ```
 
-Save MixUp mistakes visualization with a custom output name:
+Save SGD100 mistakes visualization with a custom output name:
 
 ```bash
 python3 visualize_mistakes.py \
-  --model-path models/cifar_resnet18_mixup_best.pth \
-  --output cifar_resnet_mixup_mistakes.png
+  --model-path models/cifar_resnet18_sgd100_best.pth \
+  --output cifar_resnet_sgd100_mistakes.png
 ```
 
 Change the number of shown mistakes:
@@ -288,12 +311,12 @@ Run prediction on a single image:
 python3 predict.py --image samples/cat.png
 ```
 
-Run prediction with the MixUp checkpoint:
+Run prediction with the best SGD/Nesterov checkpoint:
 
 ```bash
 python3 predict.py \
   --image samples/cat.png \
-  --model-path models/cifar_resnet18_mixup_best.pth
+  --model-path models/cifar_resnet18_sgd100_best.pth
 ```
 
 Run prediction on a custom image:
@@ -370,18 +393,21 @@ mps
 Main training settings for the best model:
 
 ```text
-Epochs: 40
-Optimizer: AdamW
+Epochs: 100
+Optimizer: SGD
+Learning rate: 0.1
+Momentum: 0.9
+Nesterov: true
+Weight decay: 5e-4
 Scheduler: CosineAnnealingLR
 Loss: CrossEntropyLoss(label_smoothing=0.1)
 RandomErasing: enabled
-MixUp alpha: 0.2
 Best checkpoint selection: by test accuracy
 ```
 
 ## Notes
 
-MixUp improved the final model from **93.56%** to **93.75%**.
+Switching from AdamW to SGD with momentum and Nesterov acceleration improved the final model from **93.75%** to **95.49%**.
 
 The most difficult classes were animals with similar visual features, especially:
 
@@ -398,26 +424,40 @@ The model was trained on CIFAR-10 images with a resolution of 32x32 pixels, so p
 Current release:
 
 ```text
+v1.3.0
+```
+
+Release highlights:
+
+* added optimizer selection to `train.py`
+* added SGD/Nesterov training support
+* improved best accuracy to **95.49%**
+* reduced errors from **625** to **451**
+* updated confusion matrix images
+* added SGD100 confident mistakes visualization
+* updated README and best model reference
+
+Previous release:
+
+```text
 v1.2.0
 ```
 
 Release highlights:
 
-* cleaned project structure
-* refactored training and evaluation pipeline
-* added single-image prediction
-* added CIFAR-10 sample export
-* added Gradio demo
 * added MixUp training support
 * improved best accuracy to **93.75%**
+* added MixUp confident mistakes visualization
+* updated README with MixUp results
 
 ## Future Improvements
 
 Possible next experiments:
 
-* SGD + Nesterov benchmark
-* 100–200 epoch training
+* SGD + Nesterov for 200 epochs
+* target 96% test accuracy
 * CutMix
+* MixUp with SGD
 * ResNet-34
 * WideResNet
 * stronger augmentation
