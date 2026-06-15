@@ -66,7 +66,13 @@ def train_one_epoch(model, train_loader, loss_fn, optimizer, device, mixup_alpha
         total_loss += loss.item() * images.size(0)
 
         predictions = outputs.argmax(dim=1)
-        correct += (predictions == labels).sum().item()
+        if mixup_alpha > 0:
+            correct += (
+                lam * (predictions == labels_a).sum().item()
+                + (1 - lam) * (predictions == labels_b).sum().item()
+            )
+        else:
+            correct += (predictions == labels).sum().item()
         total += labels.size(0)
 
     avg_loss = total_loss / total

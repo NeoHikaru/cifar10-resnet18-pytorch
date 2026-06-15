@@ -63,7 +63,7 @@ demo = gr.Interface(
     title="CIFAR-10 ResNet-18 Image Classifier",
     description=(
         "PyTorch ResNet-18 trained on CIFAR-10. "
-        "Best test accuracy: 93.56%. "
+        "Best test accuracy: 95.49%. "
         "The model works best with CIFAR-like images."
     ),
     examples=[

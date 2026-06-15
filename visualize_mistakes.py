@@ -122,7 +122,7 @@ def parse_args():
         "--model-path",
         type=str,
         default=None,
-        help="Path to model checkpoint. Default: models/cifar_resnet18_smooth_erasing_best.pth",
+        help="Path to model checkpoint. Default: models/cifar_resnet18_sgd100_best.pth",
     )
 
     parser.add_argument("--batch-size", type=int, default=128)

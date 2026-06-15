@@ -94,12 +94,13 @@ def parse_args():
         "--model-path",
         type=str,
         default=None,
-        help="Path to model checkpoint. Default: models/cifar_resnet18_smooth_erasing_best.pth",
+        help="Path to model checkpoint. Default: models/cifar_resnet18_sgd100_best.pth",
     )
 
     parser.add_argument(
         "--top-k",
         type=int,
+        choices=range(1, 11),
         default=3,
         help="Number of top predictions to show",
     )
